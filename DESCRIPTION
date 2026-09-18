@@ -24,6 +24,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 URL: https://github.com/census-specs/Rboard
 BugReports: https://github.com/census-specs/Rboard/issues
+Logo: man/figures/logo.png
 Depends:
     R (>= 4.0)
 Imports:
@@ -49,3 +50,4 @@ Suggests:
 RoxygenNote: 7.3.1
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
+SocialImage: man/figures/logo.png

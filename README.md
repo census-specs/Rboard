@@ -1,5 +1,7 @@
 # Rboard
 
+<img src="man/figures/logo.png" align="right" height="139" alt="Logo Rboard" />
+
 > Outil de construction de tableaux de bord statistiques interactifs.
 
 [![R-CMD-check](https://github.com/census-specs/Rboard/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/census-specs/Rboard/actions/workflows/R-CMD-check.yaml)
