@@ -1,0 +1,270 @@
+---
+title: "Introduction à Rboard"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction à Rboard}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  fig.align = "center",
+  out.width = "100%"
+)
+```
+
+## Qu'est-ce que Rboard ?
+
+**Rboard** est une application R/Shiny conçue pour construire des
+tableaux de bord de résultats statistiques : p-values, moyennes, tailles
+d'effet, graphiques, commentaires d'interprétation.
+
+Contrairement aux outils de Business Intelligence classiques, Rboard est
+**orienté reporting statistique**. Chaque indicateur est pensé pour
+présenter un résultat d'analyse, pas pour explorer des données.
+
+Vous pouvez :
+
+- **Importer** des données depuis CSV, Excel ou RDS
+- **Créer** des KPI statistiques (moyennes, tests, corrélations)
+- **Visualiser** avec plus de 25 types de graphiques
+- **Assembler** un dashboard en grille 12 × 6
+- **Exporter** en HTML, Word ou PDF
+
+------------------------------------------------------------------------
+
+## Installation
+
+Rboard n'est pas encore sur le CRAN. Installez-le depuis GitHub :
+
+```{r eval = FALSE}
+# Installer devtools si nécessaire
+install.packages("devtools")
+
+# Installer Rboard
+devtools::install_github("census-specs/Rboard")
+```
+
+------------------------------------------------------------------------
+
+## Lancer l'application
+
+Une fois installé, lancez l'application Shiny :
+
+```{r eval = FALSE}
+library(Rboard)
+Rboard::run_app()
+```
+
+Une fenêtre s'ouvre dans votre navigateur. Vous arrivez sur l'onglet
+**Projet - Vue d'ensemble**.
+
+------------------------------------------------------------------------
+
+## Parcours typique
+
+L'application se compose de plusieurs onglets qui suivent le flux de
+travail naturel d'une analyse statistique.
+
+### 1. Import
+
+Commencez par charger un jeu de données. Rboard accepte :
+
+- **CSV** : format texte standard
+- **Excel** : `.xlsx` et `.xls`
+- **RDS** : format binaire natif de R
+- **Data.frame de l'environnement R** : si vous avez déjà un objet en
+  mémoire
+
+Le jeu de données est ensuite visible à tout moment dans l'onglet
+**Données**.
+
+### 2. Créer des KPI
+
+Rboard propose plusieurs familles de KPI, chacune dans un onglet dédié :
+
+- **Stats descriptives** : moyenne, médiane, écart-type, quartiles
+- **Comparaison de groupes** : test t, Wilcoxon, ANOVA, Kruskal-Wallis
+- **Association / corrélation** : Pearson, Spearman, Chi-deux, Fisher
+- **Tableaux croisés** : effectifs et pourcentages
+- **Statistiques sur 1 variable** : fréquences, effectifs, Shapiro
+- **Saisie manuelle** : pour les valeurs calculées ailleurs
+
+Chaque KPI créé est stocké dans la bibliothèque du projet, accessible
+via l'onglet **Liste des KPI**.
+
+```{r eval = FALSE}
+# Exemple : créer un KPI moyenne directement en R
+library(Rboard)
+
+kpi <- creer_kpi(
+  nom = "Age moyen",
+  valeur = 42.5,
+  type = "moyenne",
+  format = "decimal_2"
+)
+
+print(kpi$label)
+```
+
+### 3. Créer des graphiques
+
+L'onglet **Graphiques → Créer un graphique** propose :
+
+- Sélection des variables X et Y
+- Suggestion automatique du type de graphique selon les données
+- Choix de palette de couleurs
+- Aperçu en temps réel
+
+Vous pouvez choisir parmi plus de 25 types : nuage de points, boxplot,
+violon, barplot, histogramme, densité, mosaïque, heatmap, etc.
+
+Les graphiques créés s'ajoutent à votre **bibliothèque** personnelle.
+
+### 4. Construire le dashboard
+
+L'onglet **Dashboard** est l'espace de composition. Vous y ajoutez :
+
+- **Des lignes** : chacune peut contenir plusieurs éléments côte à côte
+- **Des éléments** : KPI, tableaux, graphiques, blocs de texte
+
+La grille fait **12 colonnes de large** et **6 unités de haut**. Chaque
+élément a une largeur (3, 6 ou 12 colonnes) et une hauteur (1 à 4
+unités) selon son type.
+
+**Trois formats de tableau** :
+
+| Format  | Largeur    | Hauteur  |
+|---------|------------|----------|
+| Compact | 3 / 6 / 12 | 2 unités |
+| Long    | 6 / 12     | 3 unités |
+| Étendu  | 6          | 4 unités |
+
+**Deux formats de graphique** :
+
+| Format   | Largeur | Hauteur  |
+|----------|---------|----------|
+| Standard | 6 / 12  | 3 unités |
+| Grand    | 6 / 12  | 4 unités |
+
+Une page du dashboard correspond à une page A4 paysage. Vous pouvez
+créer autant de pages que nécessaire.
+
+### 5. Bibliothèque de textes
+
+Pour les commentaires d'interprétation, utilisez la **Bibliothèque de
+textes**. Chaque texte est réutilisable sur plusieurs pages et supporte
+le Markdown : gras, italique, listes, code.
+
+Vous pouvez aussi insérer un texte directement lors de la composition du
+dashboard.
+
+### 6. Exporter
+
+Trois formats de sortie :
+
+- **HTML** : document autonome avec 6 thèmes au choix
+- **Word** (`.docx`) : pour intégration dans un rapport
+- **PDF** : A4 paysage, qualité vectorielle
+
+```{r eval = FALSE}
+# Exemple : exporter le dashboard en HTML
+exporter_html(
+  projet = mon_projet,
+  chemin = "rapport.html",
+  titre = "Mon analyse",
+  theme = "flatly"
+)
+```
+
+------------------------------------------------------------------------
+
+## Script Runner
+
+L'onglet **Script R** permet d'exécuter un script R dans un
+environnement isolé et d'en extraire automatiquement :
+
+- **Les KPI** : résultats de tests, régressions, vecteurs
+- **Les tableaux** : data.frames
+- **Les textes markdown** : chaînes de caractères
+- **Les graphiques** : objets `ggplot`
+
+Vous cochez ce qui vous intéresse et cliquez sur **Tout ajouter à la
+bibliothèque**.
+
+```{r eval = FALSE}
+# Exemple de script que Rboard peut analyser
+res_t <- t.test(age ~ sexe, data = donnees)
+
+tableau <- data.frame(
+  Statistique = c("Moyenne H", "Moyenne F"),
+  Valeur = c(45.2, 42.8)
+)
+
+interpretation <- "### Résultats
+Le test t met en évidence une différence **significative** (p < 0,05)."
+```
+
+------------------------------------------------------------------------
+
+## Mode présentation
+
+Pour projeter un dashboard en réunion, utilisez le bouton **Mode
+présentation** dans l'onglet Dashboard. L'application passe en plein
+écran :
+
+- **Flèches ← →** : naviguer entre les pages
+- **Échap** : quitter le mode présentation
+
+------------------------------------------------------------------------
+
+## Sauvegarde et rechargement
+
+Un projet Rboard est un fichier `.rds` qui contient :
+
+- Le jeu de données importé
+- Tous les KPI créés
+- Les graphiques
+- La bibliothèque de textes
+- Le dashboard complet avec ses pages
+
+Pour sauvegarder :
+
+1.  Onglet **Projet → Sauvegarder**
+2.  Choisir un emplacement
+3.  Le fichier est écrit au format `.rds`
+
+Pour recharger :
+
+1.  Onglet **Projet → Charger**
+2.  Sélectionner le fichier
+3.  Le projet complet est restauré
+
+------------------------------------------------------------------------
+
+## Étapes suivantes
+
+- Consulter la documentation des fonctions clés : `?creer_kpi`,
+  `?construire_graphique`, `?exporter_html`
+- Signaler un bug ou proposer une amélioration sur
+  [GitHub](https://github.com/census-specs/Rboard/issues)
+- Consulter le [journal des
+  modifications](https://github.com/census-specs/Rboard/blob/main/NEWS.md)
+
+------------------------------------------------------------------------
+
+## Auteur
+
+**Pierre Valdeze MBOM MBOM**
+
+- GitHub : [\@census-specs](https://github.com/census-specs)
+- Email :
+  [pierrembom\@outlook.com](mailto:pierrembom@outlook.com){.email}
