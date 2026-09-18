@@ -1,0 +1,53 @@
+Package: Rboard
+Type: Package
+Title: Outil de Construction de Tableaux de Bord Statistiques
+Version: 0.1.0
+Authors@R: 
+    person(
+      given = "Pierre Valdeze",
+      family = "MBOM MBOM",
+      email = "pierrembom@outlook.com",
+      role = c("aut", "cre"),
+      comment = c(ORCID = "")
+    )
+Description: Application Shiny interactive pour construire des tableaux
+    de bord de resultats statistiques (p-values, moyennes, tailles
+    d'effet, graphiques, commentaires d'interpretation) et les exporter
+    en HTML, Word ou PDF. Rboard est oriente reporting statistique :
+    chaque indicateur est pense pour presenter un resultat d'analyse,
+    pas pour explorer des donnees. Il propose un import multi-format,
+    une bibliotheque de KPI statistiques, un moteur graphique base sur
+    'ggplot2', un editeur de dashboard en grille 12x6, un Script Runner
+    avec detection automatique des objets R, et un mode presentation
+    plein ecran.
+License: MIT + file LICENSE
+Encoding: UTF-8
+URL: https://github.com/census-specs/Rboard
+BugReports: https://github.com/census-specs/Rboard/issues
+Depends:
+    R (>= 4.0)
+Imports:
+    shiny,
+    bslib,
+    bsicons,
+    DT,
+    readxl,
+    shinyFiles,
+    rmarkdown,
+    officer,
+    flextable,
+    gridExtra,
+    commonmark,
+    ggplot2,
+    htmltools,
+    knitr,
+    tools,
+    utils,
+    stats,
+    grDevices,
+    grid
+Suggests:
+    testthat (>= 3.0.0)
+RoxygenNote: 7.3.1
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3

@@ -1,0 +1,60 @@
+# --- R ---
+.Rhistory
+.RData
+.RDataTmp
+.Ruserdata
+.Rproj.user/
+.Rproj
+*.Rproj
+*.Rproj.user/
+.Renviron
+.Renviron.local
+
+# --- Build R ---
+*.tar.gz
+*.zip
+*.Rcheck/
+*.tgz
+*.pdf
+!man/*.pdf
+
+# --- Shiny / cache sass ---
+inst/app/www/.sass_cache/
+.rsconnect/
+cache/
+shinyapps/
+
+# --- Tests ---
+tests/testthat/*.rds
+test_*.rds
+*.rds.bak
+tests/testthat/_snaps/*.new
+
+# --- Systeme ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+*#
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+
+# --- Logs ---
+*.log
+*.Rout
+
+# --- Donnees utilisateur locales ---
+donnees_test/
+data_utilisateur/
+*.xlsx
+*.csv
+!inst/extdata/*.csv
+!inst/extdata/*.xlsx

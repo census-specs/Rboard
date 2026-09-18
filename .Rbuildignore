@@ -1,0 +1,16 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^\.gitignore$
+^\.github$
+^run\.R$
+^run_tests\.R$
+^test_b2\.R$
+^test_browser\.R$
+^clean_duplicates\.R$
+^README\.Rmd$
+^cran-comments\.md$
+^\.Rbuildignore$
+^inst/app/www/\.sass_cache$
+^\.vscode$
+^\.idea$

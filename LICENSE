@@ -1,0 +1,4 @@
+cat > LICENSE << 'EOF'
+YEAR: 2026
+COPYRIGHT HOLDER: Pierre Valdeze MBOM MBOM
+EOF
