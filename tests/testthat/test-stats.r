@@ -102,10 +102,6 @@ test_that("kpi_tableau_croise construit un tableau avec totaux", {
                            affichage = "effectifs", totaux = TRUE)
   expect_equal(k$type, "tableau")
   expect_s3_class(k$tableau, "data.frame")
-  # 2 lignes + Total = 3 lignes ; 2 col + Total = 3 colonnes
-  # MAIS : la 1ere colonne est le libelle de ligne, donc :
-  # - soit 4 colonnes (1 libelle + 2 modalites + Total)
-  # On attend donc 4 colonnes et 3 lignes
   expect_equal(nrow(k$tableau), 3)
   expect_equal(ncol(k$tableau), 4)
 })

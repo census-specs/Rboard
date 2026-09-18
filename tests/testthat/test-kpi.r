@@ -85,3 +85,15 @@ test_that("supprimer_kpi ignore les ids inexistants", {
   expect_silent(p <- supprimer_kpi(p, "K999"))
   expect_equal(length(p$kpi), 0)
 })
+
+test_that("creer_kpi_tableau cree un tableau", {
+  tab <- data.frame(
+    Modalite = c("H", "F"),
+    Valeur = c("12", "15"),
+    stringsAsFactors = FALSE
+  )
+  k <- creer_kpi_tableau("Test tableau", tab, sous_type = "par_groupe")
+  expect_equal(k$type, "tableau")
+  expect_s3_class(k$tableau, "data.frame")
+  expect_match(k$id, "^T")
+})

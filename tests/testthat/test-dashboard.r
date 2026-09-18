@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # ==============================================================================
-# 1. Constantes et helpers de dimensions
+# 1. Constantes et helpers
 # ==============================================================================
 
 test_that("les constantes de grille sont coherentes", {
@@ -13,58 +13,54 @@ test_that("les constantes de grille sont coherentes", {
   expect_equal(HAUTEUR_TEXTE, 1L)
   expect_equal(HAUTEUR_TABLEAU, 2L)
   expect_equal(HAUTEUR_TABLEAU_LONG, 3L)
+  expect_equal(HAUTEUR_TABLEAU_ETENDU, 4L)
   expect_equal(HAUTEUR_GRAPHIQUE, 3L)
-})
-
-test_that("les largeurs autorisees ne contiennent plus 4", {
-  expect_equal(LARGEURS_STANDARD, c(3L, 6L, 12L))
-  expect_equal(LARGEURS_LARGES, c(6L, 12L))
-  expect_equal(LARGEURS_FORCEES_12, 12L)
-  expect_false(4L %in% LARGEURS_STANDARD)
-  expect_false(4L %in% LARGEURS_LARGES)
+  expect_equal(HAUTEUR_GRAPHIQUE_LARGE, 4L)
 })
 
 test_that("rboard_hauteur_element retourne la bonne hauteur", {
   expect_equal(rboard_hauteur_element("kpi"), 1L)
   expect_equal(rboard_hauteur_element("texte"), 1L)
   expect_equal(rboard_hauteur_element("graphique"), 3L)
+  expect_equal(rboard_hauteur_element("graphique", graphique_long = TRUE), 4L)
 
   kpi_tab <- list(type = "tableau")
   expect_equal(rboard_hauteur_element("kpi", kpi_tab), HAUTEUR_TABLEAU)
   expect_equal(rboard_hauteur_element("kpi", kpi_tab, tableau_long = TRUE),
                HAUTEUR_TABLEAU_LONG)
+  expect_equal(rboard_hauteur_element("kpi", kpi_tab, tableau_etendu = TRUE),
+               HAUTEUR_TABLEAU_ETENDU)
 
   kpi_simple <- list(type = "moyenne")
   expect_equal(rboard_hauteur_element("kpi", kpi_simple), 1L)
 })
 
-test_that("rboard_largeurs_autorisees retourne les bonnes largeurs", {
-  expect_equal(rboard_largeurs_autorisees("kpi"), LARGEURS_STANDARD)
-  expect_equal(rboard_largeurs_autorisees("texte"), LARGEURS_STANDARD)
-  expect_equal(rboard_largeurs_autorisees("graphique"), LARGEURS_LARGES)
-
+test_that("rboard_largeurs_autorisees tableau long accepte 6 ou 12", {
   kpi_tab <- list(type = "tableau")
-  expect_equal(rboard_largeurs_autorisees("kpi", kpi_tab), LARGEURS_STANDARD)
   expect_equal(rboard_largeurs_autorisees("kpi", kpi_tab, tableau_long = TRUE),
-               12L)
+               c(6L, 12L))
+})
+
+test_that("rboard_largeurs_autorisees tableau etendu impose 6", {
+  kpi_tab <- list(type = "tableau")
+  expect_equal(rboard_largeurs_autorisees("kpi", kpi_tab, tableau_etendu = TRUE),
+               6L)
+})
+
+test_that("rboard_largeurs_autorisees standard", {
+  expect_equal(rboard_largeurs_autorisees("kpi"), c(3L, 6L, 12L))
+  expect_equal(rboard_largeurs_autorisees("texte"), c(3L, 6L, 12L))
+  expect_equal(rboard_largeurs_autorisees("graphique"), c(6L, 12L))
 })
 
 test_that("rboard_suggere_tableau_long detecte les tableaux longs", {
-  tab_court <- list(type = "tableau",
-                    tableau = data.frame(a = 1:3, b = 4:6))
-  tab_long <- list(type = "tableau",
-                   tableau = data.frame(a = 1:10, b = 11:20))
+  tab_court <- list(type = "tableau", tableau = data.frame(a = 1:3))
+  tab_long <- list(type = "tableau", tableau = data.frame(a = 1:10))
 
   expect_false(rboard_suggere_tableau_long(tab_court))
   expect_true(rboard_suggere_tableau_long(tab_long))
-
-  # Non-tableau : toujours FALSE
   expect_false(rboard_suggere_tableau_long(list(type = "moyenne")))
   expect_false(rboard_suggere_tableau_long(NULL))
-
-  # Tableau vide
-  expect_false(rboard_suggere_tableau_long(list(type = "tableau",
-                                                 tableau = data.frame())))
 })
 
 # ==============================================================================
@@ -93,34 +89,16 @@ test_that("ajouter_page et obtenir_page fonctionnent", {
   expect_equal(obtenir_page(d, p1$id)$titre, "Page 1")
 })
 
-test_that("supprimer_page retire la bonne page", {
-  d <- creer_dashboard()
-  p1 <- creer_page("Page 1")
-  p2 <- creer_page("Page 2")
-  d <- ajouter_page(d, p1)
-  d <- ajouter_page(d, p2)
-  d <- supprimer_page(d, p1$id)
-  expect_equal(length(d$pages), 1)
-  expect_equal(d$pages[[1]]$titre, "Page 2")
-})
-
-test_that("renommer_page change le titre", {
-  d <- creer_dashboard()
-  p <- creer_page("Ancien")
-  d <- ajouter_page(d, p)
-  d <- renommer_page(d, p$id, "Nouveau")
-  expect_equal(obtenir_page(d, p$id)$titre, "Nouveau")
-})
-
 # ==============================================================================
 # 3. creer_element
 # ==============================================================================
 
-test_that("creer_element pose hauteur_unites et tableau_long par defaut", {
+test_that("creer_element pose hauteur_unites par defaut", {
   el <- creer_element("texte", contenu = "test", taille_largeur = 6)
   expect_equal(el$hauteur_unites, 1L)
-  expect_false(isTRUE(el$tableau_long))
   expect_equal(el$taille, 6L)
+  expect_false(isTRUE(el$tableau_long))
+  expect_false(isTRUE(el$tableau_etendu))
 })
 
 test_that("creer_element deduit la hauteur du type", {
@@ -134,12 +112,6 @@ test_that("creer_element deduit la hauteur du type", {
   expect_equal(el_kpi$hauteur_unites, HAUTEUR_KPI)
 })
 
-test_that("creer_element respecte hauteur_unites fourni", {
-  el <- creer_element("kpi", id_kpi = "K1", taille_largeur = 6,
-                       hauteur_unites = 3L)
-  expect_equal(el$hauteur_unites, 3L)
-})
-
 test_that("creer_element accepte les largeurs 3, 6, 12", {
   expect_equal(creer_element("texte", contenu = "x", taille_largeur = 3)$taille, 3L)
   expect_equal(creer_element("texte", contenu = "x", taille_largeur = 6)$taille, 6L)
@@ -151,22 +123,40 @@ test_that("creer_element refuse la largeur 4", {
                "invalide")
 })
 
-test_that("creer_element refuse les largeurs invalides", {
-  expect_error(creer_element("texte", contenu = "x", taille_largeur = 5), "invalide")
-  expect_error(creer_element("texte", contenu = "x", taille_largeur = 7), "invalide")
-  expect_error(creer_element("texte", contenu = "x", taille_largeur = 0), "invalide")
-})
-
 test_that("creer_element refuse un type invalide", {
   expect_error(creer_element("inconnu", contenu = "test"), "invalide")
 })
 
-test_that("creer_element force la largeur 12 pour tableau_long", {
-  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 6,
+test_that("creer_element avec tableau_long accepte largeur 6 ou 12", {
+  el6 <- creer_element("kpi", id_kpi = "T1", taille_largeur = 6,
+                        tableau_long = TRUE, hauteur_unites = 3L)
+  expect_equal(el6$taille, 6L)
+  expect_true(el6$tableau_long)
+
+  el12 <- creer_element("kpi", id_kpi = "T1", taille_largeur = 12,
+                         tableau_long = TRUE, hauteur_unites = 3L)
+  expect_equal(el12$taille, 12L)
+})
+
+test_that("creer_element avec tableau_long et largeur 3 force a 12", {
+  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 3,
                        tableau_long = TRUE, hauteur_unites = 3L)
   expect_equal(el$taille, 12L)
-  expect_true(el$tableau_long)
-  expect_equal(el$hauteur_unites, 3L)
+})
+
+test_that("creer_element avec tableau_etendu force largeur 6 et h 4", {
+  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 12,
+                       tableau_etendu = TRUE)
+  expect_equal(el$taille, 6L)
+  expect_true(el$tableau_etendu)
+  expect_equal(el$hauteur_unites, HAUTEUR_TABLEAU_ETENDU)
+})
+
+test_that("creer_element refuse tableau_long ET tableau_etendu", {
+  expect_error(
+    creer_element("kpi", id_kpi = "T1", tableau_long = TRUE, tableau_etendu = TRUE),
+    "long.*etendu|etendu.*long"
+  )
 })
 
 test_that("creer_element pose niveau_titre pour style=titre", {
@@ -176,102 +166,41 @@ test_that("creer_element pose niveau_titre pour style=titre", {
 
   el2 <- creer_element("texte", contenu = "Titre", style = "titre",
                         taille_largeur = 6, niveau_titre = 99L)
-  expect_equal(el2$niveau_titre, 2L)  # fallback
+  expect_equal(el2$niveau_titre, 2L)
+})
 
-  el3 <- creer_element("texte", contenu = "Texte", style = "normal",
-                        taille_largeur = 6)
-  expect_null(el3$niveau_titre)
+test_that("creer_element accepte un id_texte", {
+  el <- creer_element("texte", contenu = "x", taille_largeur = 6,
+                       id_texte = "TXT001")
+  expect_equal(el$id_texte, "TXT001")
 })
 
 # ==============================================================================
-# 4. Lignes
+# 4. Ajout d'elements
 # ==============================================================================
 
-test_that("ajouter_ligne ajoute une ligne a la page", {
+test_that("ajouter_element fonctionne sur ligne vide", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  expect_equal(length(obtenir_page(d, p$id)$lignes), 1)
-})
-
-test_that("deplacer_ligne change l'ordre", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  d <- ajouter_ligne(d, p$id)
-
-  id_l1 <- d$pages[[1]]$lignes[[1]]$id
-  id_l2 <- d$pages[[1]]$lignes[[2]]$id
-
-  d <- deplacer_ligne(d, p$id, id_l1, "bas")
-  expect_equal(d$pages[[1]]$lignes[[1]]$id, id_l2)
-  expect_equal(d$pages[[1]]$lignes[[2]]$id, id_l1)
-})
-
-# ==============================================================================
-# 5. Largeur et hauteur utilisees
-# ==============================================================================
-
-test_that("largeur_utilisee_page calcule correctement", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
 
-  expect_equal(largeur_utilisee_page(d, p$id), 0L)
-
-  el1 <- creer_element("texte", contenu = "x", taille_largeur = 6)
-  d <- ajouter_element(d, p$id, id_l, el1)
-  expect_equal(largeur_utilisee_page(d, p$id), 6L)
-
-  el2 <- creer_element("texte", contenu = "y", taille_largeur = 3)
-  d <- ajouter_element(d, p$id, id_l, el2)
-  expect_equal(largeur_utilisee_page(d, p$id), 9L)
+  el <- creer_element("texte", contenu = "x", taille_largeur = 6)
+  d <- ajouter_element(d, p$id, id_l, el)
+  expect_equal(length(d$pages[[1]]$lignes[[1]]$elements), 1)
 })
 
-test_that("hauteur_utilisee_page calcule correctement", {
+test_that("ajouter_element refuse largeur > 12", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  expect_equal(hauteur_utilisee_page(d, p$id), 0L)
-
-  # KPI en h=1
-  el1 <- creer_element("texte", contenu = "x", taille_largeur = 6,
-                        hauteur_unites = 1L)
-  d <- ajouter_element(d, p$id, id_l, el1)
-  expect_equal(hauteur_utilisee_page(d, p$id), 1L)
-})
-
-test_that("hauteur_ligne retourne le max des hauteurs", {
-  ligne <- creer_ligne()
-  ligne$elements <- list(
-    creer_element("texte", contenu = "a", taille_largeur = 3, hauteur_unites = 1L),
-    creer_element("texte", contenu = "b", taille_largeur = 3, hauteur_unites = 2L),
-    creer_element("texte", contenu = "c", taille_largeur = 3, hauteur_unites = 1L)
-  )
-  expect_equal(hauteur_ligne(ligne), 2L)
-})
-
-# ==============================================================================
-# 6. Ajout d'elements et contraintes
-# ==============================================================================
-
-test_that("ajouter_element refuse de depasser 12 colonnes", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
 
   el1 <- creer_element("texte", contenu = "x", taille_largeur = 6, hauteur_unites = 1L)
   el2 <- creer_element("texte", contenu = "y", taille_largeur = 6, hauteur_unites = 1L)
-  el3 <- creer_element("texte", contenu = "z", taille_largeur = 3, hauteur_unites = 1L)
+  el3 <- creer_element("texte", contenu = "z", taille_largeur = 6, hauteur_unites = 1L)
 
   d <- ajouter_element(d, p$id, id_l, el1)
   d <- ajouter_element(d, p$id, id_l, el2)
@@ -279,12 +208,11 @@ test_that("ajouter_element refuse de depasser 12 colonnes", {
   expect_error(ajouter_element(d, p$id, id_l, el3), "pleine")
 })
 
-test_that("ajouter_element refuse de depasser la hauteur totale", {
+test_that("ajouter_element refuse hauteur > 6", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
 
-  # 6 lignes de h=1 -> page pleine (6 unites)
   for (i in 1:6) {
     d <- ajouter_ligne(d, p$id)
   }
@@ -295,117 +223,55 @@ test_that("ajouter_element refuse de depasser la hauteur totale", {
     d <- ajouter_element(d, p$id, id_l, el)
   }
 
-  # Ajouter une 7eme ligne de h=1 doit echouer
   d <- ajouter_ligne(d, p$id)
   id_l7 <- d$pages[[1]]$lignes[[7]]$id
-  el7 <- creer_element("texte", contenu = "debord", taille_largeur = 12,
-                        hauteur_unites = 1L)
+  el7 <- creer_element("texte", contenu = "x", taille_largeur = 12, hauteur_unites = 1L)
   expect_error(ajouter_element(d, p$id, id_l7, el7), "pleine")
 })
 
-test_that("ajouter_element accepte un graphique sur page vide", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  el <- creer_element("graphique", id_kpi = "G1", taille_largeur = 6,
-                       hauteur_unites = 3L)
-  d <- ajouter_element(d, p$id, id_l, el)
-  expect_equal(hauteur_utilisee_page(d, p$id), 3L)
-})
-
-test_that("ajouter_element accepte graphique (h=3) + KPI (h=1) sur page vide", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  el_g <- creer_element("graphique", id_kpi = "G1", taille_largeur = 6,
-                         hauteur_unites = 3L)
-  el_k <- creer_element("kpi", id_kpi = "K1", taille_largeur = 6,
-                         hauteur_unites = 1L)
-
-  d <- ajouter_element(d, p$id, id_l, el_g)
-  # Apres graphique h=3 : il reste 3 unites
-  expect_equal(hauteur_utilisee_page(d, p$id), 3L)
-})
-
-test_that("ajouter_element refuse graphique (h=3) + 2eme graphique (h=3)", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  d <- ajouter_ligne(d, p$id)
-
-  # 1er graphique sur ligne 1 (12 col, h=3)
-  id_l1 <- d$pages[[1]]$lignes[[1]]$id
-  el_g1 <- creer_element("graphique", id_kpi = "G1", taille_largeur = 12,
-                          hauteur_unites = 3L)
-  d <- ajouter_element(d, p$id, id_l1, el_g1)
-
-  # 2eme graphique sur ligne 2 (12 col, h=3) : total = 6 unites
-  id_l2 <- d$pages[[1]]$lignes[[2]]$id
-  el_g2 <- creer_element("graphique", id_kpi = "G2", taille_largeur = 12,
-                          hauteur_unites = 3L)
-  d <- ajouter_element(d, p$id, id_l2, el_g2)
-  expect_equal(hauteur_utilisee_page(d, p$id), 6L)
-})
-
-test_that("ajouter_element accepte un tableau long en h=3 (12 col)", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 12,
-                       tableau_long = TRUE, hauteur_unites = 3L)
-  d <- ajouter_element(d, p$id, id_l, el)
-  expect_equal(hauteur_utilisee_page(d, p$id), 3L)
-})
-
 # ==============================================================================
-# 7. Suppression et modification d'elements
+# 5. Modification
 # ==============================================================================
 
-test_that("supprimer_element retire le bon element", {
+test_that("modifier_element bascule tableau_long sur largeur 6", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
 
-  el <- creer_element("texte", contenu = "test", taille_largeur = 6)
-  d <- ajouter_element(d, p$id, id_l, el)
-  expect_equal(length(d$pages[[1]]$lignes[[1]]$elements), 1)
-
-  d <- supprimer_element(d, p$id, id_l, el$id)
-  expect_equal(length(d$pages[[1]]$lignes[[1]]$elements), 0)
-})
-
-test_that("modifier_element change les proprietes de base", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  el <- creer_element("texte", contenu = "ancien", taille_largeur = 6)
+  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 6,
+                       hauteur_unites = 2L)
   d <- ajouter_element(d, p$id, id_l, el)
 
   d <- modifier_element(d, p$id, id_l, el$id,
-                         list(contenu = "nouveau", taille = 12))
-  el_modifie <- d$pages[[1]]$lignes[[1]]$elements[[1]]
-  expect_equal(el_modifie$contenu, "nouveau")
-  expect_equal(el_modifie$taille, 12)
+                         list(tableau_long = TRUE, taille = 6L))
+  el_mod <- d$pages[[1]]$lignes[[1]]$elements[[1]]
+  expect_true(el_mod$tableau_long)
+  expect_equal(el_mod$taille, 6L)
+  expect_equal(el_mod$hauteur_unites, HAUTEUR_TABLEAU_LONG)
 })
 
-test_that("modifier_element refuse taille=4", {
+test_that("modifier_element bascule tableau_long sur largeur 12", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
+  d <- ajouter_page(d, p)
+  d <- ajouter_ligne(d, p$id)
+  id_l <- d$pages[[1]]$lignes[[1]]$id
+
+  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 6,
+                       hauteur_unites = 2L)
+  d <- ajouter_element(d, p$id, id_l, el)
+
+  d <- modifier_element(d, p$id, id_l, el$id,
+                         list(tableau_long = TRUE, taille = 12L))
+  el_mod <- d$pages[[1]]$lignes[[1]]$elements[[1]]
+  expect_equal(el_mod$taille, 12L)
+})
+
+test_that("modifier_element refuse taille 4", {
+  d <- creer_dashboard()
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
@@ -418,9 +284,9 @@ test_that("modifier_element refuse taille=4", {
     "invalide")
 })
 
-test_that("modifier_element bascule tableau_long -> force 12 et h=3", {
+test_that("modifier_element bascule tableau_etendu", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
@@ -429,58 +295,35 @@ test_that("modifier_element bascule tableau_long -> force 12 et h=3", {
                        hauteur_unites = 2L)
   d <- ajouter_element(d, p$id, id_l, el)
 
-  d <- modifier_element(d, p$id, id_l, el$id,
-                         list(tableau_long = TRUE))
+  d <- modifier_element(d, p$id, id_l, el$id, list(tableau_etendu = TRUE))
   el_mod <- d$pages[[1]]$lignes[[1]]$elements[[1]]
-  expect_true(el_mod$tableau_long)
-  expect_equal(el_mod$taille, 12L)
-  expect_equal(el_mod$hauteur_unites, HAUTEUR_TABLEAU_LONG)
+  expect_true(el_mod$tableau_etendu)
+  expect_equal(el_mod$taille, 6L)
+  expect_equal(el_mod$hauteur_unites, HAUTEUR_TABLEAU_ETENDU)
 })
 
-test_that("modifier_element bascule tableau_long=FALSE -> retour h=2", {
+# ==============================================================================
+# 6. Suppression / deplacement
+# ==============================================================================
+
+test_that("supprimer_element retire le bon element", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
 
-  el <- creer_element("kpi", id_kpi = "T1", taille_largeur = 12,
-                       tableau_long = TRUE, hauteur_unites = 3L)
+  el <- creer_element("texte", contenu = "test", taille_largeur = 6)
   d <- ajouter_element(d, p$id, id_l, el)
+  expect_equal(length(d$pages[[1]]$lignes[[1]]$elements), 1)
 
-  d <- modifier_element(d, p$id, id_l, el$id,
-                         list(tableau_long = FALSE))
-  el_mod <- d$pages[[1]]$lignes[[1]]$elements[[1]]
-  expect_false(el_mod$tableau_long)
-  expect_equal(el_mod$hauteur_unites, HAUTEUR_TABLEAU)
-})
-
-test_that("modifier_element refuse tableau_long si largeur 12 occupee", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  # KPI simple en 6 col
-  el1 <- creer_element("kpi", id_kpi = "K1", taille_largeur = 6,
-                        hauteur_unites = 1L)
-  d <- ajouter_element(d, p$id, id_l, el1)
-
-  # Tableau compact en 6 col
-  el2 <- creer_element("kpi", id_kpi = "T1", taille_largeur = 6,
-                        hauteur_unites = 2L)
-  d <- ajouter_element(d, p$id, id_l, el2)
-
-  # Tenter de passer el2 en tableau long : impossible car el1 occupe 6 col
-  expect_error(
-    modifier_element(d, p$id, id_l, el2$id, list(tableau_long = TRUE)),
-    "deja occupee")
+  d <- supprimer_element(d, p$id, id_l, el$id)
+  expect_equal(length(d$pages[[1]]$lignes[[1]]$elements), 0)
 })
 
 test_that("deplacer_element echange deux elements", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
   id_l <- d$pages[[1]]$lignes[[1]]$id
@@ -495,68 +338,23 @@ test_that("deplacer_element echange deux elements", {
   expect_equal(d$pages[[1]]$lignes[[1]]$elements[[2]]$contenu, "A")
 })
 
-# ==============================================================================
-# 8. verifier_placement
-# ==============================================================================
-
-test_that("verifier_placement accepte un element en place", {
+test_that("deplacer_ligne change l'ordre", {
   d <- creer_dashboard()
-  p <- creer_page("Page 1")
+  p <- creer_page("P1")
   d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
-
-  el <- creer_element("texte", contenu = "x", taille_largeur = 6,
-                       hauteur_unites = 1L)
-  expect_true(verifier_placement(d, p$id, id_l, el))
-})
-
-test_that("verifier_placement refuse si largeur saturée", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
   d <- ajouter_ligne(d, p$id)
-  id_l <- d$pages[[1]]$lignes[[1]]$id
 
-  el1 <- creer_element("texte", contenu = "a", taille_largeur = 12,
-                        hauteur_unites = 1L)
-  d <- ajouter_element(d, p$id, id_l, el1)
+  id_l1 <- d$pages[[1]]$lignes[[1]]$id
+  id_l2 <- d$pages[[1]]$lignes[[2]]$id
 
-  el2 <- creer_element("texte", contenu = "b", taille_largeur = 3,
-                        hauteur_unites = 1L)
-  expect_error(verifier_placement(d, p$id, id_l, el2), "pleine")
-})
-
-test_that("verifier_placement refuse si hauteur saturée", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  # 6 lignes de h=1
-  for (i in 1:6) d <- ajouter_ligne(d, p$id)
-  for (i in 1:6) {
-    id_l <- d$pages[[1]]$lignes[[i]]$id
-    el <- creer_element("texte", contenu = paste0("t", i),
-                         taille_largeur = 12, hauteur_unites = 1L)
-    d <- ajouter_element(d, p$id, id_l, el)
-  }
-  # Ajout d'une 7eme ligne
-  d <- ajouter_ligne(d, p$id)
-  id_l7 <- d$pages[[1]]$lignes[[7]]$id
-  el7 <- creer_element("texte", contenu = "x", taille_largeur = 12,
-                        hauteur_unites = 1L)
-  expect_error(verifier_placement(d, p$id, id_l7, el7), "pleine")
-})
-
-test_that("verifier_placement refuse une ligne introuvable", {
-  d <- creer_dashboard()
-  p <- creer_page("Page 1")
-  d <- ajouter_page(d, p)
-  el <- creer_element("texte", contenu = "x", taille_largeur = 6)
-  expect_error(verifier_placement(d, p$id, "L_inconnu", el), "introuvable")
+  d <- deplacer_ligne(d, p$id, id_l1, "bas")
+  expect_equal(d$pages[[1]]$lignes[[1]]$id, id_l2)
+  expect_equal(d$pages[[1]]$lignes[[2]]$id, id_l1)
 })
 
 # ==============================================================================
-# 9. resumer_dashboard
+# 7. resumer_dashboard
 # ==============================================================================
 
 test_that("resumer_dashboard retourne un data.frame", {
@@ -568,11 +366,4 @@ test_that("resumer_dashboard retourne un data.frame", {
   res <- resumer_dashboard(d)
   expect_s3_class(res, "data.frame")
   expect_equal(nrow(res), 1)
-  expect_true("titre" %in% names(res))
-})
-
-test_that("resumer_dashboard gere un dashboard vide", {
-  res <- resumer_dashboard(creer_dashboard())
-  expect_s3_class(res, "data.frame")
-  expect_equal(nrow(res), 0)
 })

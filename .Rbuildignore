@@ -13,4 +13,4 @@
 ^\.Rbuildignore$
 ^inst/app/www/\.sass_cache$
 ^\.vscode$
-^\.idea$
+^\.idea$^LICENSE\.md$

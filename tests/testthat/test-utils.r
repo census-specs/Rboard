@@ -55,10 +55,6 @@ test_that("formater_valeur gere NULL et NA", {
 })
 
 test_that("operateur %||% fonctionne", {
-  # Note : le package rlang (via bslib/shiny) definit aussi %||%.
-  # Selon l'ordre de chargement, NA peut etre traite comme valeur
-  # normale (rlang) ou comme vide (Rboard). On teste donc uniquement
-  # les cas ou tous les packages sont d'accord.
   expect_equal(NULL %||% "defaut", "defaut")
   expect_equal("valeur" %||% "defaut", "valeur")
   expect_equal(character(0) %||% "defaut", "defaut")
@@ -83,4 +79,63 @@ test_that("rboard_try retourne la valeur si succes", {
   res <- rboard_try(42, "test")
   expect_true(res$ok)
   expect_equal(res$valeur, 42)
+})
+
+# --- Helpers de securite ---
+
+test_that("rboard_largeur_element retourne 6 par defaut", {
+  expect_equal(rboard_largeur_element(NULL), 6L)
+  expect_equal(rboard_largeur_element(list()), 6L)
+  expect_equal(rboard_largeur_element(list(taille = NULL)), 6L)
+  expect_equal(rboard_largeur_element(list(taille = NA)), 6L)
+  expect_equal(rboard_largeur_element(list(taille = 4)), 6L)
+})
+
+test_that("rboard_largeur_element accepte 3, 6, 12", {
+  expect_equal(rboard_largeur_element(list(taille = 3)), 3L)
+  expect_equal(rboard_largeur_element(list(taille = 6)), 6L)
+  expect_equal(rboard_largeur_element(list(taille = 12)), 12L)
+})
+
+test_that("rboard_hauteur_el retourne 1 par defaut", {
+  expect_equal(rboard_hauteur_el(NULL), 1L)
+  expect_equal(rboard_hauteur_el(list()), 1L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = NULL)), 1L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = NA)), 1L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = 5)), 1L)
+})
+
+test_that("rboard_hauteur_el accepte 1, 2, 3, 4", {
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = 1)), 1L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = 2)), 2L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = 3)), 3L)
+  expect_equal(rboard_hauteur_el(list(hauteur_unites = 4)), 4L)
+})
+
+test_that("rboard_somme_largeurs gere le vide", {
+  expect_equal(rboard_somme_largeurs(NULL), 0L)
+  expect_equal(rboard_somme_largeurs(list()), 0L)
+})
+
+test_that("rboard_somme_largeurs calcule correctement", {
+  els <- list(
+    list(taille = 6),
+    list(taille = 3),
+    list(taille = 3)
+  )
+  expect_equal(rboard_somme_largeurs(els), 12L)
+})
+
+test_that("rboard_max_hauteurs gere le vide", {
+  expect_equal(rboard_max_hauteurs(NULL), 0L)
+  expect_equal(rboard_max_hauteurs(list()), 0L)
+})
+
+test_that("rboard_max_hauteurs calcule correctement", {
+  els <- list(
+    list(hauteur_unites = 1),
+    list(hauteur_unites = 3),
+    list(hauteur_unites = 2)
+  )
+  expect_equal(rboard_max_hauteurs(els), 3L)
 })

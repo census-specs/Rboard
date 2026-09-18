@@ -2,7 +2,6 @@
 # Tests : R/import.R
 # ==============================================================================
 
-# --- Creation d'un CSV de test ---
 creer_csv_test <- function() {
   chemin <- tempfile(fileext = ".csv")
   df <- data.frame(

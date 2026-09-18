@@ -32,8 +32,6 @@ Imports:
     bsicons,
     DT,
     readxl,
-    shinyFiles,
-    rmarkdown,
     officer,
     flextable,
     gridExtra,

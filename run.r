@@ -51,6 +51,7 @@ source("R/mod_dash_element.R")
 source("R/mod_dash_element_edit.R")
 source("R/mod_dash_apercu.R")
 source("R/mod_dash_present.R")
+source("R/globals.R")
 
 # --- 5. Redefinition finale de securite ---
 `%||%` <- function(a, b) {
